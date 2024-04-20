@@ -5,15 +5,12 @@ from pymongo.server_api import ServerApi
 import openai
 from typing import List
 
-
-uri = "mongodb+srv://pgarg4:TE8HRkPMv18iBj64@cluster0.7y0k8ar.mongodb.net" # you can copy uri from MongoDB Atlas Cloud Console https://cloud.mongodb.com
+uri = "mongodb+srv://pgarg4:TE8HRkPMv18iBj64@cluster0.7y0k8ar.mongodb.net" 
 embedding_model_string = 'nomic-ai/nomic-embed-text-v1.5'
-
-
-# Create a new client and connect to the server
+video_id = 1
 client = MongoClient(uri, server_api=ServerApi('1'))
 fw_client = openai.OpenAI(
-  api_key="et9MwRyCcuEHGK5JQqTHKIgWAZEaYwB5GAbnlA0RkF8ZAaZT", # you can find Fireworks API key under accounts -> API keys
+  api_key="et9MwRyCcuEHGK5JQqTHKIgWAZEaYwB5GAbnlA0RkF8ZAaZT", 
   base_url="https://api.fireworks.ai/inference/v1"
 )
 
@@ -29,7 +26,6 @@ def load_transcript(file_path):
     with open(file_path, 'r') as file:
         data = json.load(file)
     return data
-
 
 def merge_captions(transcript, max_words=50):
     chunks = []
@@ -68,20 +64,13 @@ def store_embeddings(chunks):
 #        pprint.pprint(chunk)
         embedding_output = generate_embeddings(chunk, embedding_model_string)
         document = {
+	    "video_id":1,
             "text": chunk,
             "embedding": embedding_output
         }
         collection.insert_one(document)
 #        print(f"Embedding size is: {str(len(sample_output))}")
 #        print(sample_output)
-
-#    for chunk, embedding in zip(chunks, embeddings):
-#        document = {
-#            "text": chunk,
-#            "embedding": embedding
-#        }
-#        collection.insert_one(document)
-#    print("Embeddings stored in MongoDB.")
 
 def main():
     file_path = 'transcript.json'
@@ -91,14 +80,6 @@ def main():
     chunks = merge_captions(transcript)
 
     store_embeddings(chunks)
-#    for i, chunk in enumerate(chunks):
-#        print('\n'+f"Chunk {i+1}:")
-#        pprint.pprint(chunk)
-#        sample_output = generate_embeddings(chunk, embedding_model_string)
-#        print(f"Embedding size is: {str(len(sample_output))}")
-#        print(sample_output)
-
-
 
 if __name__ == "__main__":
     main()
