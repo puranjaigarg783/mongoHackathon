@@ -37,15 +37,14 @@ def search_relevant_chunks(video_id, query_embedding, top_k):
     db = client['ygpt']
     collection = db['ygpt_data']
     
-    results = collection.aggregate([
+    pipeline = [
         {
-            '$search': {
+            '$vectorSearch': {
                 'index': 'vector_index',
-                'knnBeta': {
-                    'vector': query_embedding,
-                    'path': 'embedding',
-                    'k': top_k
-                }
+                'path': 'embedding',
+                'queryVector': query_embedding,
+                'numCandidates': 200,
+                'limit': top_k
             }
         },
         {
@@ -55,14 +54,18 @@ def search_relevant_chunks(video_id, query_embedding, top_k):
         },
         {
             '$project': {
+                '_id': 0,
                 'text': 1,
-                'score': {'$meta': 'searchScore'}
+                'score': {
+                    '$meta': 'vectorSearchScore'
+                }
             }
         }
-    ])
+    ]
+    
+    results = collection.aggregate(pipeline)
     
     return list(results)
-
 def extract_chunk_texts(search_results):
     chunk_texts = [result['text'] for result in search_results]
     return chunk_texts
